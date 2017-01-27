@@ -3,9 +3,6 @@
 import os
 import couchdb
 import json
-import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')
 
 couch = couchdb.Server()
 couch = couchdb.Server('http://admin:admin@127.0.0.1:5984/')
@@ -16,7 +13,7 @@ for root, dirs, files in os.walk('news/', topdown=False):
     for name in files:
         print(os.path.join(root, name))
         file = open(os.path.join(root, name), 'r')
-        array_news = json.loads(file.read().decode('latin-1').encode("utf-8"))
+        array_news = json.loads(file.read(), "utf8")
         for news in array_news:
             id = news['id']
             del news['id']
