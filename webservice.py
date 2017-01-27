@@ -40,7 +40,7 @@ class getlastnews:
             doc = db[id]
             x = json.dumps(doc)
             y = y + x + ','
-            count = count + 1
+            count += 1
             if count == int(num):
                 break
         b = "[" + y + "]"
