@@ -5,15 +5,18 @@ import couchdb
 import json
 
 urls = (
-    '/GetNewsById/(.*)', 'getnewsbyid',
-    '/GetLastNews/(.*)', 'getlastnews',
-    '/GetPressNews/(.*)', 'getpressnews',
-    '/SearchNews/(.*)', 'searchnews',
+    '/GetNewsById/(.*)', 'GetNewsById',
+    '/GetLastNews/(.*)', 'GetLastNews',
+    '/GetPressNews/(.*)', 'GetPressNews',
+    '/SearchNews/(.*)', 'SearchNews',
 )
 app = web.application(urls, globals())
 
 
-class getnewsbyid:
+class GetNewsById:
+    def __init__(self):
+        pass
+
     def GET(self, news_id):
         couch = couchdb.Server('http://admin:admin@127.0.0.1:5984/')
         db = couch['news']
@@ -23,7 +26,10 @@ class getnewsbyid:
             return ""
 
 
-class getlastnews:
+class GetLastNews:
+    def __init__(self):
+        pass
+
     def GET(self, num):
         couch = couchdb.Server('http://admin:admin@127.0.0.1:5984/')
         db = couch['news']
@@ -39,7 +45,10 @@ class getlastnews:
         return json.dump(array_news)
 
 
-class getpressnews:
+class GetPressNews:
+    def __init__(self):
+        pass
+
     def GET(self, pub_name):
         couch = couchdb.Server('http://admin:admin@127.0.0.1:5984/')
         db = couch['news']
@@ -53,7 +62,10 @@ class getpressnews:
         return json.dump(array_news)
 
 
-class searchnews:
+class SearchNews:
+    def __init__(self):
+        pass
+
     def GET(self, search_word):
 
         couch = couchdb.Server('http://admin:admin@127.0.0.1:5984/')
