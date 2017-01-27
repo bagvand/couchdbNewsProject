@@ -17,16 +17,10 @@ class getnewsbyid:
     def GET(self, news_id):
         couch = couchdb.Server('http://admin:admin@127.0.0.1:5984/')
         db = couch['news']
-
-        y = ""
-        for id in db:
-
-            doc = db[id]
-            x = json.dumps(doc)
-            if doc['newsId'] == news_id:
-                y = x
-
-        return y
+        if news_id in db:
+            return db[news_id]
+        else:
+            return ""
 
 
 class getlastnews:
@@ -34,36 +28,29 @@ class getlastnews:
         couch = couchdb.Server('http://admin:admin@127.0.0.1:5984/')
         db = couch['news']
         count = 0
-        y = ""
+        array_news = []
 
-        for id in db:
-            doc = db[id]
-            x = json.dumps(doc)
-            y = y + x + ','
+        for _id in db:
+            news = db[_id]
+            array_news.append(news)
             count += 1
             if count == int(num):
                 break
-        b = "[" + y + "]"
-        b = b.replace(',]', ']', 1)
-        return b
+        return json.dump(array_news)
 
 
 class getpressnews:
     def GET(self, pub_name):
         couch = couchdb.Server('http://admin:admin@127.0.0.1:5984/')
         db = couch['news']
-        y = ""
-        x = ""
-        for id in db:
+        array_news = []
 
-            doc = db[id]
-            x = json.dumps(doc)
-            if doc['press'] == pub_name:
-                y = y + x + ','
+        for _id in db:
+            news = db[_id]
+            if news['press'] == pub_name:
+                array_news.append(news)
 
-        b = "[" + y + "]"
-        b = b.replace(',]', ']', 1)
-        return b
+        return json.dump(array_news)
 
 
 class searchnews:
@@ -71,20 +58,15 @@ class searchnews:
 
         couch = couchdb.Server('http://admin:admin@127.0.0.1:5984/')
         db = couch['news']
+        array_news = []
 
-        y = ""
+        for _id in db:
 
-        for id in db:
+            news = db[_id]
+            if set(search_word.split()) & set(news['text'].split()):
+                array_news.append(news)
 
-            doc = db[id]
-            x = json.dumps(doc)
-            if set(search_word.split()) & set(doc['text'].split()):
-                y = y + x + ','
-
-        b = "[" + y + "]"
-        b = b.replace(',]', ']', 1)
-
-        return b
+        return json.dump(array_news)
 
 
 if __name__ == "__main__":
