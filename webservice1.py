@@ -5,12 +5,13 @@ import os, sys
 import web
 import couchdb
 import json 
-import math   
+import string   
 
 urls = (
     '/GetNewsById/(.*)','getnewsbyid',
     '/GetLastNews/(.*)', 'getlastnews',
     '/GetPressNews/(.*)', 'getpressnews',
+    '/SearchNews/(.*)', 'searchnews',
     )
 app = web.application(urls, globals())
 
@@ -49,7 +50,9 @@ class getlastnews:
             count=count+1
             if count==int(num):
                 break   
-        return "["+y+"]"
+        b="["+y+"]"
+        b=b.replace(',]',']',1)
+        return b   
     
     
     
@@ -67,7 +70,33 @@ class getpressnews:
                 y=y+x+',' 
         
         
-        return "["+y+"]"   
+        b="["+y+"]"
+        b=b.replace(',]',']',1)
+        return b   
+    
+    
+       
+        
+class searchnews:        
+    def GET(self, search_word):
+    
+        couch = couchdb.Server('http://admin:admin@127.0.0.1:5984/')
+        db = couch['news']    
+        
+        
+        y=""
+        
+        for id in db:    
+            
+            doc=db[id]
+            x=json.dumps(doc)
+            if set(search_word.split()) & set(doc['text'].split()):
+                y=y+x+',' 
+                
+        b="["+y+"]"
+        b=b.replace(',]',']',1)
+        
+        return b               
         
 
 
