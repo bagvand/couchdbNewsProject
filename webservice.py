@@ -40,9 +40,10 @@ class GetLastNews:
             news = db[_id]
             array_news.append(news)
             count += 1
+            print news
             if count == int(num):
                 break
-        return json.dump(array_news)
+        return json.dumps(array_news, indent=4, sort_keys=True, ensure_ascii=False)
 
 
 class GetPressNews:
@@ -59,7 +60,7 @@ class GetPressNews:
             if news['press'] == pub_name:
                 array_news.append(news)
 
-        return json.dump(array_news)
+        return json.dumps(array_news, indent=4, sort_keys=True, ensure_ascii=False)
 
 
 class SearchNews:
@@ -78,7 +79,7 @@ class SearchNews:
             if set(search_word.split()) & set(news['text'].split()):
                 array_news.append(news)
 
-        return json.dump(array_news)
+        return json.dumps(array_news, indent=4, sort_keys=True, ensure_ascii=False)
 
 
 if __name__ == "__main__":
