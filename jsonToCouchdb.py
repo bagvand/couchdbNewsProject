@@ -28,7 +28,7 @@ for root, dirs, files in os.walk('news/', topdown=False):
         for news in array_news:
             _id = news['id']
             del news['id']
-            if _id not in server_dns.get_news_database():
+            if _id not in server_dns.get_dns_database():
                 server = servers[rond]
                 server.get_news_database()[_id] = news
                 server_dns.get_dns_database()[_id] = {"address": server.get_server_address()}
