@@ -46,6 +46,9 @@ class DnsServer(ParentServer):
 
         return dns_db
 
+    def get_dns_database_address(self):
+        return self.get_dns_database() + 'dns'
+
 
 class Server(ParentServer):
     def __init__(self, ip, port=5984, username='admin', password='admin'):
@@ -63,6 +66,9 @@ class Server(ParentServer):
             pass
 
         return news_db
+
+    def get_news_database_address(self):
+        return self.get_server_address() + 'news'
 
     def is_available(self):
         if self.get_news_database() is None:

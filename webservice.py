@@ -10,16 +10,16 @@ server0 = Server('192.168.37.4', 5984)
 server1 = Server('192.168.37.5', 5984)
 server2 = Server('192.168.37.6', 5984)
 
-server0.couch_server.replicate(server0.get_server_address() + 'news',
-                               server1.get_server_address() + 'news',
+server0.couch_server.replicate(server0.get_news_database_address(),
+                               server1.get_news_database_address(),
                                continuous=True)
 
-server1.couch_server.replicate(server1.get_server_address() + 'news',
-                               server2.get_server_address() + 'news',
+server1.couch_server.replicate(server1.get_news_database_address(),
+                               server2.get_news_database_address(),
                                continuous=True)
 
-server2.couch_server.replicate(server2.get_server_address() + 'news',
-                               server0.get_server_address() + 'news',
+server2.couch_server.replicate(server2.get_news_database_address(),
+                               server0.get_news_database_address(),
                                continuous=True)
 
 urls = (
