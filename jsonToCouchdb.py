@@ -27,6 +27,11 @@ class ParentServer:
         return "http://" + self.username + ":" + self.password \
                + "@" + self.ip + ":" + self.port + "/"
 
+    def is_this_server(self, address):
+        if self.get_server_address() == address:
+            return True
+        return False
+
 
 class DnsServer(ParentServer):
     def __init__(self, ip, port=5984, username='admin', password='admin'):
@@ -68,11 +73,6 @@ class Server(ParentServer):
             return False
         return True
 
-    def is_this_server(self, ip):
-        if self.ip == ip:
-            return True
-        return False
-
 
 server_dns = DnsServer('192.168.37.4', 5984)
 server0 = Server('192.168.37.4', 5984)
@@ -94,14 +94,16 @@ for root, dirs, files in os.walk('news/', topdown=False):
                     rond = (rond + 1) % 3
                 elif rond == 0 and server0.is_available() and flag == 0:
                     server0.get_news_database()[_id] = news
-                    server_dns.get_dns_database()[_id] = {"ip": "192.168.37.4", "backup": "192.168.37.5"}
+                    server_dns.get_dns_database()[_id] = {"address": server0.get_server_address(),
+                                                          "backupAddress": server1.get_server_address()}
                     rond = (rond + 1) % 3
                     flag = 1
                 elif not server1.is_available():
                     rond = (rond + 1) % 3
                 elif rond == 1 and server1.is_available() and flag == 0:
                     server1.get_news_database()[_id] = news
-                    server_dns.get_dns_database()[_id] = {"ip": "192.168.37.5", "backup": "192.168.37.6"}
+                    server_dns.get_dns_database()[_id] = {"address": server1.get_server_address(),
+                                                          "backupAddress": server2.get_server_address()}
                     rond = (rond + 1) % 3
                     flag = 1
                 elif not server2.is_available():
@@ -109,23 +111,24 @@ for root, dirs, files in os.walk('news/', topdown=False):
 
                 elif rond == 2 and server2.is_available() and flag == 0:
                     server2.get_news_database()[_id] = news
-                    server_dns.get_dns_database()[_id] = {"ip": "192.168.37.6", "backup": "192.168.37.4"}
+                    server_dns.get_dns_database()[_id] = {"address": server2.get_server_address(),
+                                                          "backupAddress": server0.get_server_address()}
                     rond = (rond + 1) % 3
                     flag = 1
 
             else:
                 is_update_exist = False
-                doc_ip = server_dns.get_dns_database()[_id]
-                ip = doc_ip['ip']
-                ip_backup = doc_ip['backup']
+                doc_place = server_dns.get_dns_database()[_id]
+                address = doc_place['address']
+                backupAddress = doc_place['backupAddress']
                 news_inDb = None
 
                 db = None
-                if server0.is_this_server(ip) and server0.is_available():
+                if server0.is_this_server(address) and server0.is_available():
                     db = server0.get_news_database()
-                elif server1.is_this_server(ip) and server1.is_available():
+                elif server1.is_this_server(address) and server1.is_available():
                     db = server1.get_news_database()
-                elif server2.is_this_server(ip) and server2.is_available():
+                elif server2.is_this_server(address) and server2.is_available():
                     db = server2.get_news_database()
 
                 news_inDb = db[_id]
