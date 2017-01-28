@@ -56,7 +56,7 @@ class GetLastNews:
         pass
 
     def GET(self, num):
-        db = server0.get_news_database()
+        db = servers[0].get_news_database()
         count = 0
         array_news = []
 
