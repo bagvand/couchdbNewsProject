@@ -1,7 +1,6 @@
 #!/usr/local/bin/python
 # -*- coding: utf-8 -*-
 import web
-import couchdb
 import json
 from user_define_classes import DnsServer
 from user_define_classes import Server
@@ -10,6 +9,18 @@ server_dns = DnsServer('192.168.37.4', 5984)
 server0 = Server('192.168.37.4', 5984)
 server1 = Server('192.168.37.5', 5984)
 server2 = Server('192.168.37.6', 5984)
+
+server0.couch_server.replicate(server0.get_server_address() + 'news',
+                               server1.get_server_address() + 'news',
+                               continuous=True)
+
+server1.couch_server.replicate(server1.get_server_address() + 'news',
+                               server2.get_server_address() + 'news',
+                               continuous=True)
+
+server2.couch_server.replicate(server2.get_server_address() + 'news',
+                               server0.get_server_address() + 'news',
+                               continuous=True)
 
 urls = (
     '/GetNewsById/(.*)', 'GetNewsById',
@@ -138,41 +149,6 @@ class SearchNews:
             error = "server 2 is crashed"
 
         return json.dumps(array_news, indent=4, sort_keys=True, ensure_ascii=False)
-
-
-class replicate:
-    def GET(self, password):
-        count = 0
-        if password == "123456":
-            couch = couchdb.Server()
-
-            try:
-                couch.replicate('http://admin:admin@192.168.37.4:5984/news',
-                                'http://admin:admin@192.168.37.5:5984/news', continuous=True)
-                count += 1
-            except:
-                error = "error"
-
-            try:
-                couch.replicate('http://admin:admin@192.168.37.5:5984/news',
-                                'http://admin:admin@192.168.37.6:5984/news', continuous=True)
-                count += 1
-            except:
-                error = "error"
-
-            try:
-                couch.replicate('http://admin:admin@192.168.37.6:5984/news',
-                                'http://admin:admin@192.168.37.4:5984/news', continuous=True)
-                count += 1
-            except:
-                error = "error"
-
-        else:
-            result = "password is not correct"
-
-        result = count
-
-        return result
 
 
 if __name__ == "__main__":
