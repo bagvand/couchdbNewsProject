@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import web
 import json
+import couchdb
 from user_define_classes import DnsServer
 from user_define_classes import Server
 
@@ -84,12 +85,14 @@ class GetPressNews:
 
         for server in servers:
             db = server.get_news_database()
-            if db is not None:
-                for _id in db:
-                    news = db[_id]
-                    if news['press'] == pub_name:
-                        array_news.append(news)
-
+            
+            map_fun = 'function(doc) {if (doc.press =='+'"'+pub_name+'"'+') emit(doc._id, doc);}'
+                    
+          
+            for row in db.query(map_fun):
+                array_news.append(row.value)
+                
+       
         return json.dumps(array_news, indent=4, sort_keys=True, ensure_ascii=False)
 
 
