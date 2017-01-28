@@ -70,3 +70,16 @@ for root, dirs, files in os.walk('news/', topdown=False):
 
                 if is_update_exist:
                     db[news_inDb.id] = news_inDb
+
+
+server0.couch_server.replicate("news",
+                               server1.get_news_database_address(),
+                               continuous=True)
+
+server1.couch_server.replicate("news",
+                               server2.get_news_database_address(),
+                               continuous=True)
+
+server2.couch_server.replicate("news",
+                               server0.get_news_database_address(),
+                               continuous=True)
