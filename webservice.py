@@ -10,6 +10,12 @@ server0 = Server('192.168.37.4', 5984)
 server1 = Server('192.168.37.5', 5984)
 server2 = Server('192.168.37.6', 5984)
 
+servers = [
+    server0,
+    server1,
+    server2
+]
+
 urls = (
     '/GetNewsById/(.*)', 'GetNewsById',
     '/GetLastNews/(.*)', 'GetLastNews',
@@ -29,14 +35,15 @@ class GetNewsById:
         if news_id in dns_db:
             doc_place = dns_db[news_id]
             address = doc_place['address']
-            backup_address = doc_place['backup_address']
             db = None
-            if (server0.is_this_server(address) or server0.is_this_server(backup_address)) and server0.is_available():
-                db = server0.get_news_database()
-            elif (server1.is_this_server(address) or server1.is_this_server(backup_address)) and server1.is_available():
-                db = server1.get_news_database()
-            elif (server2.is_this_server(address) or server2.is_this_server(backup_address)) and server2.is_available():
-                db = server2.get_news_database()
+
+            for server in servers:
+                if server.is_this_server(address):
+                    if server.is_available():
+                        db = server.get_news_database()
+                    elif server.backup_server.is_available():
+                        db = server.backup_server.get_news_database()
+                    break
 
             doc = db[news_id]
             return json.dumps(doc)
@@ -69,34 +76,14 @@ class GetPressNews:
 
     def GET(self, pub_name):
         array_news = []
-        try:
-            db = server0.get_news_database()
 
-            for _id in db:
-                news = db[_id]
-                if news['press'] == pub_name:
-                    array_news.append(news)
-        except:
-            error = "server 0 is crashed"
-
-        try:
-            db = server1.get_news_database()
-            for _id in db:
-                news = db[_id]
-                if news['press'] == pub_name:
-                    array_news.append(news)
-        except:
-            error = "server 1 is crashed"
-
-        try:
-            db = server2.get_news_database()
-
-            for _id in db:
-                news = db[_id]
-                if news['press'] == pub_name:
-                    array_news.append(news)
-        except:
-            error = "server 2 is crashed"
+        for server in servers:
+            db = server.get_news_database()
+            if db is not None:
+                for _id in db:
+                    news = db[_id]
+                    if news['press'] == pub_name:
+                        array_news.append(news)
 
         return json.dumps(array_news, indent=4, sort_keys=True, ensure_ascii=False)
 
@@ -109,32 +96,13 @@ class SearchNews:
 
         array_news = []
 
-        try:
-            db = server0.get_news_database()
-            for _id in db:
-                news = db[_id]
-                if set(search_word.split()) & set(news['text'].split()):
-                    array_news.append(news)
-        except:
-            error = "server 0 is crashed"
-
-        try:
-            db = server1.get_news_database()
-            for _id in db:
-                news = db[_id]
-                if set(search_word.split()) & set(news['text'].split()):
-                    array_news.append(news)
-        except:
-            error = "server 1 is crashed"
-
-        try:
-            db = server2.get_news_database()
-            for _id in db:
-                news = db[_id]
-                if set(search_word.split()) & set(news['text'].split()):
-                    array_news.append(news)
-        except:
-            error = "server 2 is crashed"
+        for server in servers:
+            db = server.get_news_database()
+            if db is not None:
+                for _id in db:
+                    news = db[_id]
+                    if set(search_word.split()) & set(news['text'].split()):
+                        array_news.append(news)
 
         return json.dumps(array_news, indent=4, sort_keys=True, ensure_ascii=False)
 

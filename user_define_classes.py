@@ -53,6 +53,7 @@ class DnsServer(ParentServer):
 class Server(ParentServer):
     def __init__(self, ip, port=5984, username='admin', password='admin'):
         super.__init__(ip, port, username, password)
+        self.backup_server = self
 
     def get_news_database(self):
         news_db = None
@@ -74,3 +75,9 @@ class Server(ParentServer):
         if self.get_news_database() is None:
             return False
         return True
+
+    def set_backup_server(self, another_server):
+        self.couch_server.replicate("news",
+                                    another_server.get_news_database_address(),
+                                    continuous=True)
+        self.backup_server = another_server

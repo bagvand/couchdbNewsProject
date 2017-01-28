@@ -9,6 +9,15 @@ server_dns = DnsServer('192.168.37.4', 5984)
 server0 = Server('192.168.37.4', 5984)
 server1 = Server('192.168.37.5', 5984)
 server2 = Server('192.168.37.6', 5984)
+servers = [
+    server0,
+    server1,
+    server2
+]
+
+server0.set_backup_server(server1)
+server1.set_backup_server(server2)
+server2.set_backup_server(server0)
 
 rond = 0
 for root, dirs, files in os.walk('news/', topdown=False):
@@ -20,47 +29,23 @@ for root, dirs, files in os.walk('news/', topdown=False):
             _id = news['id']
             del news['id']
             if _id not in server_dns.get_news_database():
-                flag = 0
-                if not server0.is_available():
-                    rond = (rond + 1) % 3
-                elif rond == 0 and server0.is_available() and flag == 0:
-                    server0.get_news_database()[_id] = news
-                    server_dns.get_dns_database()[_id] = {"address": server0.get_server_address(),
-                                                          "backup_address": server1.get_server_address()}
-                    rond = (rond + 1) % 3
-                    flag = 1
-                elif not server1.is_available():
-                    rond = (rond + 1) % 3
-                elif rond == 1 and server1.is_available() and flag == 0:
-                    server1.get_news_database()[_id] = news
-                    server_dns.get_dns_database()[_id] = {"address": server1.get_server_address(),
-                                                          "backup_address": server2.get_server_address()}
-                    rond = (rond + 1) % 3
-                    flag = 1
-                elif not server2.is_available():
-                    rond = (rond + 1) % 3
+                server = servers[rond]
+                server.get_news_database()[_id] = news
+                server_dns.get_dns_database()[_id] = {"address": server.get_server_address()}
 
-                elif rond == 2 and server2.is_available() and flag == 0:
-                    server2.get_news_database()[_id] = news
-                    server_dns.get_dns_database()[_id] = {"address": server2.get_server_address(),
-                                                          "backup_address": server0.get_server_address()}
-                    rond = (rond + 1) % 3
-                    flag = 1
+                rond = (rond + 1) % len(servers)
 
             else:
                 is_update_exist = False
                 doc_place = server_dns.get_dns_database()[_id]
                 address = doc_place['address']
-                backup_address = doc_place['backup_address']
                 news_inDb = None
 
                 db = None
-                if server0.is_this_server(address) and server0.is_available():
-                    db = server0.get_news_database()
-                elif server1.is_this_server(address) and server1.is_available():
-                    db = server1.get_news_database()
-                elif server2.is_this_server(address) and server2.is_available():
-                    db = server2.get_news_database()
+                for server in servers:
+                    if server.is_this_server(address) and server.is_available():
+                        db = server.get_news_database()
+                        break
 
                 news_inDb = db[_id]
                 for key in news.keys():
@@ -70,16 +55,3 @@ for root, dirs, files in os.walk('news/', topdown=False):
 
                 if is_update_exist:
                     db[news_inDb.id] = news_inDb
-
-
-server0.couch_server.replicate("news",
-                               server1.get_news_database_address(),
-                               continuous=True)
-
-server1.couch_server.replicate("news",
-                               server2.get_news_database_address(),
-                               continuous=True)
-
-server2.couch_server.replicate("news",
-                               server0.get_news_database_address(),
-                               continuous=True)
