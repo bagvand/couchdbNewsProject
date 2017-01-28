@@ -3,6 +3,13 @@
 import web
 import couchdb
 import json
+from user_define_classes import DnsServer
+from user_define_classes import Server
+
+server_dns = DnsServer('192.168.37.4', 5984)
+server0 = Server('192.168.37.4', 5984)
+server1 = Server('192.168.37.5', 5984)
+server2 = Server('192.168.37.6', 5984)
 
 urls = (
     '/GetNewsById/(.*)', 'GetNewsById',
@@ -18,20 +25,20 @@ class GetNewsById:
         pass
 
     def GET(self, news_id):
-        dns_couch = couchdb.Server('http://admin:admin@127.0.0.1:5984/')
-        dns_db = dns_couch['dns']
 
+        dns_db = server_dns.get_dns_database()
         if news_id in dns_db:
-            doc = dns_db[news_id]
-            ip = doc['ip']
-            ip_b = doc['backup']
-            try:
-                couch = couchdb.Server('http://admin:admin@' + ip + ':5984/')
+            doc_place = dns_db[news_id]
+            address = doc_place['address']
+            backup_address = doc_place['backup_address']
+            db = None
+            if (server0.is_this_server(address) or server0.is_this_server(backup_address)) and server0.is_available():
+                db = server0.get_news_database()
+            elif (server1.is_this_server(address) or server1.is_this_server(backup_address)) and server1.is_available():
+                db = server1.get_news_database()
+            elif (server2.is_this_server(address) or server2.is_this_server(backup_address)) and server2.is_available():
+                db = server2.get_news_database()
 
-            except:
-                couch = couchdb.Server('http://admin:admin@' + ip_b + ':5984/')
-
-            db = couch['news']
             doc = db[news_id]
             return json.dumps(doc)
         else:
@@ -43,8 +50,7 @@ class GetLastNews:
         pass
 
     def GET(self, num):
-        couch = couchdb.Server('http://admin:admin@127.0.0.1:5984/')
-        db = couch['news']
+        db = server0.get_news_database()
         count = 0
         array_news = []
 
@@ -65,9 +71,17 @@ class GetPressNews:
     def GET(self, pub_name):
         array_news = []
         try:
-            couch = couchdb.Server('http://admin:admin@192.168.37.4:5984/')
-            db = couch['news']
+            db = server0.get_news_database()
 
+            for _id in db:
+                news = db[_id]
+                if news['press'] == pub_name:
+                    array_news.append(news)
+        except:
+            error = "server 0 is crashed"
+
+        try:
+            db = server1.get_news_database()
             for _id in db:
                 news = db[_id]
                 if news['press'] == pub_name:
@@ -76,19 +90,7 @@ class GetPressNews:
             error = "server 1 is crashed"
 
         try:
-            couch = couchdb.Server('http://admin:admin@192.168.37.5:5984/')
-            db = couch['news']
-
-            for _id in db:
-                news = db[_id]
-                if news['press'] == pub_name:
-                    array_news.append(news)
-        except:
-            error = "server 2 is crashed"
-
-        try:
-            couch = couchdb.Server('http://admin:admin@192.168.37.6:5984/')
-            db = couch['news']
+            db = server2.get_news_database()
 
             for _id in db:
                 news = db[_id]
@@ -109,8 +111,16 @@ class SearchNews:
         array_news = []
 
         try:
-            couch = couchdb.Server('http://admin:admin@192.168.37.4:5984/')
-            db = couch['news']
+            db = server0.get_news_database()
+            for _id in db:
+                news = db[_id]
+                if set(search_word.split()) & set(news['text'].split()):
+                    array_news.append(news)
+        except:
+            error = "server 0 is crashed"
+
+        try:
+            db = server1.get_news_database()
             for _id in db:
                 news = db[_id]
                 if set(search_word.split()) & set(news['text'].split()):
@@ -119,24 +129,13 @@ class SearchNews:
             error = "server 1 is crashed"
 
         try:
-            couch = couchdb.Server('http://admin:admin@192.168.37.5:5984/')
-            db = couch['news']
+            db = server2.get_news_database()
             for _id in db:
                 news = db[_id]
                 if set(search_word.split()) & set(news['text'].split()):
                     array_news.append(news)
         except:
-            error = "server 1 is crashed"
-
-        try:
-            couch = couchdb.Server('http://admin:admin@192.168.37.6:5984/')
-            db = couch['news']
-            for _id in db:
-                news = db[_id]
-                if set(search_word.split()) & set(news['text'].split()):
-                    array_news.append(news)
-        except:
-            error = "server 1 is crashed"
+            error = "server 2 is crashed"
 
         return json.dumps(array_news, indent=4, sort_keys=True, ensure_ascii=False)
 
@@ -150,21 +149,21 @@ class replicate:
             try:
                 couch.replicate('http://admin:admin@192.168.37.4:5984/news',
                                 'http://admin:admin@192.168.37.5:5984/news', continuous=True)
-                count = count + 1
+                count += 1
             except:
                 error = "error"
 
             try:
                 couch.replicate('http://admin:admin@192.168.37.5:5984/news',
                                 'http://admin:admin@192.168.37.6:5984/news', continuous=True)
-                count = count + 1
+                count += 1
             except:
                 error = "error"
 
             try:
                 couch.replicate('http://admin:admin@192.168.37.6:5984/news',
                                 'http://admin:admin@192.168.37.4:5984/news', continuous=True)
-                count = count + 1
+                count += 1
             except:
                 error = "error"
 

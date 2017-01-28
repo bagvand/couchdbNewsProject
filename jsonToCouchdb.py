@@ -1,78 +1,9 @@
 #!/usr/local/bin/python
 # -*- coding: utf-8 -*-
 import os
-import couchdb
 import json
-
-
-class ParentServer:
-    def __init__(self, ip, port=5984, username='admin', password='admin'):
-        self.ip = ip
-        self.port = port
-        self.username = username
-        self.password = password
-        self.couch_server = None
-        self.set_couch_server()
-
-    def set_couch_server(self):
-        try:
-            self.couch_server = couchdb.Server(self.get_server_address())
-            return True
-        except:
-            self.couch_server = None
-
-        return False
-
-    def get_server_address(self):
-        return "http://" + self.username + ":" + self.password \
-               + "@" + self.ip + ":" + self.port + "/"
-
-    def is_this_server(self, address):
-        if self.get_server_address() == address:
-            return True
-        return False
-
-
-class DnsServer(ParentServer):
-    def __init__(self, ip, port=5984, username='admin', password='admin'):
-        super.__init__(ip, port, username, password)
-
-    def get_dns_database(self):
-        dns_db = None
-        try:
-            if (self.couch_server is not None) or self.set_couch_server():
-                if "dns" in self.couch_server:
-                    dns_db = self.couch_server['dns']
-                else:
-                    dns_db = self.couch_server.create('dns')
-        except:
-            pass
-
-        return dns_db
-
-
-class Server(ParentServer):
-    def __init__(self, ip, port=5984, username='admin', password='admin'):
-        super.__init__(ip, port, username, password)
-
-    def get_news_database(self):
-        news_db = None
-        try:
-            if (self.couch_server is not None) or self.set_couch_server():
-                if "news" in self.couch_server:
-                    news_db = self.couch_server['news']
-                else:
-                    news_db = self.couch_server.create('news')
-        except:
-            pass
-
-        return news_db
-
-    def is_available(self):
-        if self.get_news_database() is None:
-            return False
-        return True
-
+from user_define_classes import DnsServer
+from user_define_classes import Server
 
 server_dns = DnsServer('192.168.37.4', 5984)
 server0 = Server('192.168.37.4', 5984)
@@ -95,7 +26,7 @@ for root, dirs, files in os.walk('news/', topdown=False):
                 elif rond == 0 and server0.is_available() and flag == 0:
                     server0.get_news_database()[_id] = news
                     server_dns.get_dns_database()[_id] = {"address": server0.get_server_address(),
-                                                          "backupAddress": server1.get_server_address()}
+                                                          "backup_address": server1.get_server_address()}
                     rond = (rond + 1) % 3
                     flag = 1
                 elif not server1.is_available():
@@ -103,7 +34,7 @@ for root, dirs, files in os.walk('news/', topdown=False):
                 elif rond == 1 and server1.is_available() and flag == 0:
                     server1.get_news_database()[_id] = news
                     server_dns.get_dns_database()[_id] = {"address": server1.get_server_address(),
-                                                          "backupAddress": server2.get_server_address()}
+                                                          "backup_address": server2.get_server_address()}
                     rond = (rond + 1) % 3
                     flag = 1
                 elif not server2.is_available():
@@ -112,7 +43,7 @@ for root, dirs, files in os.walk('news/', topdown=False):
                 elif rond == 2 and server2.is_available() and flag == 0:
                     server2.get_news_database()[_id] = news
                     server_dns.get_dns_database()[_id] = {"address": server2.get_server_address(),
-                                                          "backupAddress": server0.get_server_address()}
+                                                          "backup_address": server0.get_server_address()}
                     rond = (rond + 1) % 3
                     flag = 1
 
@@ -120,7 +51,7 @@ for root, dirs, files in os.walk('news/', topdown=False):
                 is_update_exist = False
                 doc_place = server_dns.get_dns_database()[_id]
                 address = doc_place['address']
-                backupAddress = doc_place['backupAddress']
+                backup_address = doc_place['backup_address']
                 news_inDb = None
 
                 db = None
