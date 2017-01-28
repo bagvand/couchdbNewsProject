@@ -14,7 +14,6 @@ servers = [
     server1,
     server2
 ]
-
 server0.set_backup_server(server1)
 server1.set_backup_server(server2)
 server2.set_backup_server(server0)

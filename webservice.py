@@ -9,12 +9,12 @@ server_dns = DnsServer('192.168.37.4', 5984)
 server0 = Server('192.168.37.4', 5984)
 server1 = Server('192.168.37.5', 5984)
 server2 = Server('192.168.37.6', 5984)
-
 servers = [
     server0,
     server1,
     server2
 ]
+
 
 urls = (
     '/GetNewsById/(.*)', 'GetNewsById',
@@ -22,6 +22,7 @@ urls = (
     '/GetPressNews/(.*)', 'GetPressNews',
     '/SearchNews/(.*)', 'SearchNews',
 )
+
 app = web.application(urls, globals())
 
 
@@ -30,6 +31,8 @@ class GetNewsById:
         pass
 
     def GET(self, news_id):
+
+        web.header('Content-Type', 'application/json')
 
         dns_db = server_dns.get_dns_database()
         if news_id in dns_db:
@@ -46,9 +49,9 @@ class GetNewsById:
                     break
 
             doc = db[news_id]
-            return json.dumps(doc)
+            return json.dumps(doc, indent=4, sort_keys=True, ensure_ascii=False)
         else:
-            return ""
+            return "no"
 
 
 class GetLastNews:
@@ -56,6 +59,7 @@ class GetLastNews:
         pass
 
     def GET(self, num):
+        web.header('Content-Type', 'application/json')
         db = servers[0].get_news_database()
         count = 0
         array_news = []
@@ -75,6 +79,7 @@ class GetPressNews:
         pass
 
     def GET(self, pub_name):
+        web.header('Content-Type', 'application/json')
         array_news = []
 
         for server in servers:
@@ -93,6 +98,7 @@ class SearchNews:
         pass
 
     def GET(self, search_word):
+        web.header('Content-Type', 'application/json')
 
         array_news = []
 
