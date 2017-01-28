@@ -79,7 +79,7 @@ class Server(ParentServer):
     def set_backup_server(self, another_server):
         # generate news database if dont exist
         self.get_news_database_address()
-        another_server.get_news_database_address();
+        another_server.get_news_database_address()
 
         self.couch_server.replicate("news",
                                     another_server.get_news_database_address(),
