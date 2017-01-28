@@ -1,7 +1,7 @@
 import couchdb
 
 
-class ParentServer:
+class ParentServer(object):
     def __init__(self, ip, port=5984, username='admin', password='admin'):
         self.ip = ip
         self.port = port
@@ -21,7 +21,7 @@ class ParentServer:
 
     def get_server_address(self):
         return "http://" + self.username + ":" + self.password \
-               + "@" + self.ip + ":" + self.port + "/"
+               + "@" + self.ip + ":" + str(self.port) + "/"
 
     def is_this_server(self, address):
         if self.get_server_address() == address:
@@ -31,7 +31,7 @@ class ParentServer:
 
 class DnsServer(ParentServer):
     def __init__(self, ip, port=5984, username='admin', password='admin'):
-        super.__init__(ip, port, username, password)
+        super(DnsServer, self).__init__(ip, port, username, password)
 
     def get_dns_database(self):
         dns_db = None
@@ -52,7 +52,7 @@ class DnsServer(ParentServer):
 
 class Server(ParentServer):
     def __init__(self, ip, port=5984, username='admin', password='admin'):
-        super.__init__(ip, port, username, password)
+        super(Server, self).__init__(ip, port, username, password)
         self.backup_server = self
 
     def get_news_database(self):
