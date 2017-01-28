@@ -4,10 +4,57 @@ import os
 import couchdb
 import json
 
-couch = couchdb.Server('http://admin:admin@127.0.0.1:5984/')
+try:
+    couch = couchdb.Server('http://admin:admin@192.168.37.4:5984/')
+    if "news" in couch:
+        db = couch['news']
+    else:
+        db=couch.create('news')
+    avl_0=1
+    
+except:
+    avl_0=0    
 
-db = couch['news']
 
+try:
+    couch1 = couchdb.Server('http://admin:admin@192.168.37.5:5984/')
+    if "news" in couch1:
+        db1 = couch1['news']
+    else:
+        db1=couch1.create('news')
+        
+    avl_1=1
+except:
+    avl_1=0    
+
+try:
+    couch2 = couchdb.Server('http://admin:admin@192.168.37.6:5984/')
+    if "news" in couch2:
+        db2 = couch2['news']
+    else:
+        db2=couch2.create('news')
+        
+    avl_2=1
+except:
+    avl_2=0    
+
+
+
+
+couch_dns = couchdb.Server('http://admin:admin@192.168.37.4:5984/')
+
+if "dns" in couch_dns:
+    db_dns = couch_dns['dns']
+else:
+    db_dns=couch_dns.create('dns')
+    
+
+
+
+
+
+
+rond=0
 for root, dirs, files in os.walk('news/', topdown=False):
     for name in files:
         print(os.path.join(root, name))
@@ -16,96 +63,70 @@ for root, dirs, files in os.walk('news/', topdown=False):
         for news in array_news:
             _id = news['id']
             del news['id']
-            if _id not in db:
-                db[_id] = news
+            if _id not in db_dns:
+                flag=0
+                if avl_0==0:
+                    rond=(rond+1) % 3
+                elif rond==0 and avl_0==1 and flag==0:    
+                    db[_id] = news
+                    db_dns[_id] = {"ip":"192.168.37.4","backup":"192.168.37.5"}
+                    rond=(rond+1) % 3
+                    flag=1
+                elif avl_1==0:
+                    rond=(rond+1) % 3
+                elif rond==1 and avl_1==1 and flag==0:    
+                    db1[_id] = news
+                    db_dns[_id] = {"ip":"192.168.37.5","backup":"192.168.37.6"}
+                    rond=(rond+1) % 3
+                    flag=1
+                elif avl_2==0:
+                    rond=(rond+1) % 3
+                    
+                elif rond==2 and avl_2==1 and flag==0:    
+                    db2[_id] = news
+                    db_dns[_id] = {"ip":"192.168.37.6","backup":"192.168.37.4"}
+                    rond=(rond+1) % 3
+                    flag=1
+                
             else:
                 is_update_exist = False
-                news_inDb = db[_id]
-                for key in news.keys():
-                    if news[key] != news_inDb.get(key):
-                        news_inDb[key] = news[key]
-                        is_update_exist = True
-                        print news
+                doc_ip = db_dns[_id]
+                ip = doc_ip['ip']
+                ip_backup = doc_ip['backup']
+                if ip=="192.168.37.4" and avl_0==1:
+                    news_inDb = db[_id]
+                    for key in news.keys():
+                        if news[key] != news_inDb.get(key):
+                            news_inDb[key] = news[key]
+                            is_update_exist = True
+                            #print news
+    
+                    if is_update_exist:
+                        db[news_inDb.id] = news_inDb
+                
+                if ip=="192.168.37.5" and avl_1==1:
+                    news_inDb = db1[_id]
+                    for key in news.keys():
+                        if news[key] != news_inDb.get(key):
+                            news_inDb[key] = news[key]
+                            is_update_exist = True
+                            print news
+    
+                    if is_update_exist:
+                        db1[news_inDb.id] = news_inDb
+                
+                if ip=="192.168.37.6" and avl_2==1:
+                    news_inDb = db2[_id]
+                    for key in news.keys():
+                        if news[key] != news_inDb.get(key):
+                            news_inDb[key] = news[key]
+                            is_update_exist = True
+                            print news
+    
+                    if is_update_exist:
+                        db2[news_inDb.id] = news_inDb
+        
 
-                if is_update_exist:
-                    db[news_inDb.id] = news_inDb
 
 
-                # couchdbb=couchdb
-                # couchdbi=couchdbb.client.Server('http://admin:admin@127.0.0.1:5984')
 
-                # db=couchdbi.create['testt']
-                # db=couchdbi['testt']
-                # print("the data base name is "+db.name)
-
-                # doc_id ,doc_rev=db.save({'type':'person','name':'ali'})
-                # doc=db[doc_id]
-                # doc2={'name':'arash/ali22','type':'person'}
-                # db.save(doc2)
-
-                # print("_________________")
-                # print(doc)
-                # print("_________________")
-
-                # print(doc['type'])
-                # print(doc['name'])
-                # del db[doc.id]
-                # print(doc.id in db)
-
-                # print("tasks is")
-                # print(couchdbi.tasks())
-
-                # print("couchdb version")
-                # print(couchdbi.version())
-
-                # print(db.commit())
-
-                # print("add a doc with client uuid generator")
-                # doc_id3=uuid4().hex
-                # db[doc_id3]={'type':'person','name':'farnaz'}
-
-                # dos=dict(type='person',name='arash')
-                # db['arash22']=dos
-                # dos2=db['arash']
-                # dos2['age']=22
-                # db['arash']=dos2
-                # dos=db['arash']
-                # db.delete(dos)
-
-                # db.delete_attachment('arash','customerchurn.png')
-
-                # import image
-                # img=image.open('C:\Users\Programmer\Pictures\FootBall\0ef52a30-dc1c-11e3-8dcb-21ab1f7130ff_portugal_slogan.jpg')
-                # img.show()
-
-                # couchdbi.add_user('arashi','123')
-                # to=couchdbi.login('arash','123')
-                # print("User Token       "+to)
-                # print(couchdbi.verify_token(to))
-                # couchdbi.logout(to)
-                # print(couchdbi.verify_token(to))
-
-                # doc={'foo':'bar'}
-                # db.save(doc)
-                # couchdbi.login('arash','123')
-                # print(couchdbi.stats())
-                # for id in db:
-                #   tdoc=db[id]
-                #  if (tdoc['name']=='arash/ali22'):
-                #        tdoc['name']='arash/ali223'
-                #        tdoc['edu']='arshad'
-                #        db[tdoc.id]=tdoc
-                #        del db[tdoc.id]
-                #    print(tdoc['name']+"   "+tdoc['type'])
-
-                # map_fun = '''function(doc){
-                #        if(doc.type=='person')
-                #            emit(doc.type,doc.name);
-                #    }'''
-                #    map_reduce='''function(key,values,rereduce){
-                #   return values.length;
-                # }'''
-                #    for row in db.query(map_fun,map_reduce):
-                #        print(row['key'])#row.key
-                #        print(row['value'])#row.value
-                # break
